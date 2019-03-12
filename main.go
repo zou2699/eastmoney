@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
@@ -25,29 +26,45 @@ type Config struct {
 }
 
 func main() {
+	router := gin.Default()
 
-	var conf Config
-	file, err := ioutil.ReadFile("./config.yaml")
-	if err != nil {
-		fmt.Println(err)
+	r := router.Group("/")
+
+	{
+		r.GET("/", func(c *gin.Context) {
+			var conf Config
+			var msgList []Msg
+			file, err := ioutil.ReadFile("./config.yaml")
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			err = yaml.Unmarshal(file, &conf)
+			if err != nil {
+				fmt.Println(err)
+			}
+			//fmt.Printf("%+v", conf)
+
+			for _, id := range conf.Id {
+				bUrl := "http://fund.eastmoney.com/" + id + ".html"
+				msg := parse(bUrl)
+				msgList = append(msgList, msg)
+			}
+			c.JSON(http.StatusOK, msgList)
+		})
+
+		r.GET("/:id", func(c *gin.Context) {
+			id := c.Param("id")
+			bUrl := "http://fund.eastmoney.com/" + id + ".html"
+			msg := parse(bUrl)
+			if msg.Id == "" {
+				msg.Id = id
+			}
+			c.JSON(http.StatusOK, msg)
+		})
 	}
 
-	err = yaml.Unmarshal(file, &conf)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//fmt.Printf("%+v", conf)
-
-	for _, id := range conf.Id {
-		bUrl := "http://fund.eastmoney.com/" + id + ".html"
-		msg := parse(bUrl)
-		fmt.Printf("%+v\n", msg)
-	}
-
-	//bUrl := "http://fund.eastmoney.com/110022.html"
-	//msg := parse(bUrl)
-	//fmt.Printf("%+v\n", msg)
-
+	router.Run(":8080")
 }
 
 func parse(bUrl string) Msg {
