@@ -1,14 +1,9 @@
-FROM golang:1.11
-
-WORKDIR /go/src/app
-
-COPY . .
-
-RUN go get -d -v ./...
-RUN go install -v ./...
-RUN rm -rf /go/src/*
+FROM alpine:3.7
 
 WORKDIR /go/bin/
+
+COPY ./app .
+COPY ./config.yaml .
 
 EXPOSE 8080
 
