@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"sync"
 )
 
 const gzzfRegex = `id="gz_gszzl">(.*?)<`
@@ -34,6 +35,7 @@ func main() {
 		r.GET("/", func(c *gin.Context) {
 			var conf Config
 			var msgList []Msg
+			var wg sync.WaitGroup
 			file, err := ioutil.ReadFile("./config.yaml")
 			if err != nil {
 				fmt.Println(err)
@@ -46,10 +48,15 @@ func main() {
 			//fmt.Printf("%+v", conf)
 
 			for _, id := range conf.Id {
-				bUrl := "http://fund.eastmoney.com/" + id + ".html"
-				msg := parse(bUrl)
-				msgList = append(msgList, msg)
+				wg.Add(1)
+				go func(id string) {
+					bUrl := "http://fund.eastmoney.com/" + id + ".html"
+					msg := parse(bUrl)
+					msgList = append(msgList, msg)
+					wg.Done()
+				}(id)
 			}
+			wg.Wait()
 			c.JSON(http.StatusOK, msgList)
 		})
 
