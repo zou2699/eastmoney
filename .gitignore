@@ -5,6 +5,7 @@
 # IntelliJ project files
 .idea
 *.iml
+app
 out
 gen### Go template
 # Binaries for programs and plugins
