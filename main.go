@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -16,10 +17,10 @@ const idRegex = `</span><span class="ui-num">(.*?)</span></div>`
 const dateRegex = `id="gz_gztime">[(?](.*?)[)?]</span>`
 
 type Msg struct {
-	Name   string
-	Id     string
-	Gzzf   string
-	GzDate string
+	Name   string `json:"name"`
+	Id     string `json:"id"`
+	GzZf   string `json:"gz_zf"`
+	GzDate string `json:"gz_date"`
 }
 
 type Config struct {
@@ -28,6 +29,16 @@ type Config struct {
 
 func main() {
 	router := gin.Default()
+
+	// - No origin allowed by default
+	// - GET,POST, PUT, HEAD methods
+	// - Credentials share disabled
+	// - Preflight requests cached for 12 hours
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"}
+	// config.AllowOrigins == []string{"http://google.com", "http://facebook.com"}
+
+	router.Use(cors.New(config))
 
 	r := router.Group("/")
 
@@ -71,7 +82,7 @@ func main() {
 		})
 	}
 
-	router.Run(":8080")
+	router.Run(":8000")
 }
 
 func parse(bUrl string) Msg {
@@ -112,7 +123,7 @@ func parse(bUrl string) Msg {
 	result.GzDate = s
 
 	s = reg(gzzfRegex, respBody)
-	result.Gzzf = s
+	result.GzZf = s
 
 	return result
 
