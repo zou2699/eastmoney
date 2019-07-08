@@ -103,12 +103,14 @@ func parse(bUrl string) Msg {
 	response, err := client.Do(request)
 	if err != nil {
 		fmt.Println(err)
+        return result
 	}
 	defer response.Body.Close()
 
 	respBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println(err)
+        return result
 	}
 
 	//fmt.Println(string(respBody))
