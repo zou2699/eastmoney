@@ -76,8 +76,8 @@ func main() {
 			bUrl := "http://fund.eastmoney.com/" + id + ".html"
 			msg := parse(bUrl)
 			if msg.Id == "" {
-				//msg.Id =
-				c.String(http.StatusNotFound,"")
+				msg.Name = "Not Found"
+				c.JSON(http.StatusNotFound, msg)
 				return
 			}
 			c.JSON(http.StatusOK, msg)
@@ -105,14 +105,14 @@ func parse(bUrl string) Msg {
 	response, err := client.Do(request)
 	if err != nil {
 		fmt.Println(err)
-        return result
+		return result
 	}
 	defer response.Body.Close()
 
 	respBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println(err)
-        return result
+		return result
 	}
 
 	//fmt.Println(string(respBody))
