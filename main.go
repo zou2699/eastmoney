@@ -77,7 +77,7 @@ func main() {
 			msg := parse(bUrl)
 			if msg.Id == "" {
 				msg.Name = "Not Found"
-				c.JSON(http.StatusNotFound, msg)
+				c.JSON(http.StatusOK, msg)
 				return
 			}
 			c.JSON(http.StatusOK, msg)
