@@ -76,7 +76,9 @@ func main() {
 			bUrl := "http://fund.eastmoney.com/" + id + ".html"
 			msg := parse(bUrl)
 			if msg.Id == "" {
-				msg.Id = id
+				//msg.Id =
+				c.String(http.StatusNotFound,"")
+				return
 			}
 			c.JSON(http.StatusOK, msg)
 		})
