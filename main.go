@@ -9,18 +9,16 @@ import (
 	"net/http"
 	"regexp"
 	"sync"
+	"encoding/json"
 )
 
-const gzzfRegex = `id="gz_gszzl">(.*?)<`
-const nameRegex = `<div style="float: left">(.*?)<span>`
-const idRegex = `</span><span class="ui-num">(.*?)</span></div>`
-const dateRegex = `id="gz_gztime">[(?](.*?)[)?]</span>`
+const resultRegex = `jsonpgz\((.*?)\);`
 
 type Msg struct {
-	Name   string `json:"name"`
-	Id     string `json:"id"`
-	GzZf   string `json:"gz_zf"`
-	GzDate string `json:"gz_date"`
+	Fundcode string `json:"fundcode"`
+	Name  string `json:"name"`
+	Gszzl string `json:"gszzl"`
+	GzTime string `json:"gztime"`
 }
 
 type Config struct {
@@ -61,8 +59,11 @@ func main() {
 			for _, id := range conf.Id {
 				wg.Add(1)
 				go func(id string) {
-					bUrl := "http://fund.eastmoney.com/" + id + ".html"
+					bUrl := "http://fundgz.1234567.com.cn/js/" + id + ".js"
 					msg := parse(bUrl)
+					if msg.Fundcode == "" {
+						msg.Name = "Not Found"
+					}
 					msgList = append(msgList, msg)
 					wg.Done()
 				}(id)
@@ -73,9 +74,9 @@ func main() {
 
 		r.GET("/:id", func(c *gin.Context) {
 			id := c.Param("id")
-			bUrl := "http://fund.eastmoney.com/" + id + ".html"
+			bUrl := "http://fundgz.1234567.com.cn/js/" + id + ".js"
 			msg := parse(bUrl)
-			if msg.Id == "" {
+			if msg.Fundcode == "" {
 				msg.Name = "Not Found"
 				c.JSON(http.StatusOK, msg)
 				return
@@ -115,22 +116,15 @@ func parse(bUrl string) Msg {
 		return result
 	}
 
-	//fmt.Println(string(respBody))
+	s := reg(resultRegex, respBody)
 
-	s := reg(nameRegex, respBody)
-	result.Name = s
-
-	s = reg(idRegex, respBody)
-	result.Id = s
-
-	s = reg(dateRegex, respBody)
-	result.GzDate = s
-
-	s = reg(gzzfRegex, respBody)
-	result.GzZf = s
+	err = json.Unmarshal([]byte(s), &result)
+	if err != nil {
+		fmt.Println("Umarshal failed:", err)
+		return result
+	}
 
 	return result
-
 }
 
 func reg(regexString string, content []byte) string {
